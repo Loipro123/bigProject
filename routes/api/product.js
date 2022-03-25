@@ -60,9 +60,8 @@ router.post('/',async (req,res) => {
 //
 
 router.post('/array',async (req,res) => {
-    
+    console.log('haha')
     const {productId,commentText,userName,userId,star} = req.body;
-
     try {
       await Product.updateOne(
             { "_id":  productId},
@@ -86,18 +85,35 @@ router.post('/array',async (req,res) => {
         }
 
 
-        await Product.findOneAndUpdate({ _id: productId }, {$set: {star: (sum/comment_len).toFixed(2)}})
+        await Product.findOneAndUpdate({ _id: productId }, {$set: {star: (sum/comment_len).toFixed(1)}})
         // product = new Product({
         //     title,price,urlImage,urlLink,group
         // })
           // Encrypt password
         return res.status(400).json({
             // product: product
-            // message: products
+            message: "succeess updated"
         })
     } catch (error) {
-        res.status(500).send('Server error')
+        console.log(error)
+        res.status(500).send('Server error can not')
     }
 });
 
+
+router.post('/orderReview',async (req,res) => {
+    const {group,_id}   = req.body
+        try {
+            const products = await Product.find( { group: group } )
+            let reviews = products.sort((a, b) => (a.star < b.star) ? 1 : -1).filter((item,idex) => item._id != _id);
+            reviews = reviews.filter((item,idex) => idex < 4)
+            res.json(reviews)
+        } catch (error) {
+            res.status(500).send('Serve Error')
+        }
+    });
+
+
+
+        
 module.exports = router;
