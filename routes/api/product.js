@@ -60,9 +60,16 @@ router.post('/',async (req,res) => {
 //
 
 router.post('/array',async (req,res) => {
-    console.log('haha')
     const {productId,commentText,userName,userId,star} = req.body;
     try {
+     await Product.updateOne(
+         { "_id":  productId}, {
+            $pull: {
+                comments: {
+                userId: userId
+              }
+            }
+        });
       await Product.updateOne(
             { "_id":  productId},
       {
