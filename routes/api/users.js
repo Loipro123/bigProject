@@ -6,6 +6,7 @@ const connectDB = require('../../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('config');
+
 // @route Get api/users
 
 const User = require('../../models/User');
@@ -46,13 +47,15 @@ router.post('/',[
         user = new User({
             name,
             email,
-            avatar,
-            password
+            password,
+            address: [],
+            sales: []
         })
           // Encrypt password
         const salt = await bcrypt.genSalt(10);
 
         user.password = await bcrypt.hash(password, salt);
+        user.avatar.push('https://img-b.udemycdn.com/user/200_H/anonymous_3.png');
 
         await user.save();
         // Return jsonwebbtoken
@@ -76,5 +79,67 @@ router.post('/',[
         res.status(500).send('Server error')
     }
 });
+
+
+router.post('/updateinfor', async(req,res)=> {
+    try {
+        const {_id,name,street,zipcode,city,state,country} = req.body;
+        await User.updateOne(
+        { "_id":  _id},
+        {
+            $set: { "name" : name},
+            $push: {
+                address: {
+                    $each: [{Street:street, Zipcode:zipcode,City:city,
+                    State:state,
+                    Country:country}],
+                    $position: 0
+                }
+        }
+    } );
+    const user = await User.findById(_id).select('-password');
+    res.json(user)
+    } catch (error) {
+        
+    }
+})
+
+router.post('/emailUpdate',[
+    check('email','Please include a valid email').isEmail(),
+    check(
+        'password',
+        'password is required'
+    ).exists()
+], async(req,res)=> {
+    const errors = validationResult(req);
+        if(!errors.isEmpty()){
+            return res.status(400).json({
+                error: errors.array()
+            });
+    }
+    const {_id,email,password} = req.body;
+    try {
+        let user = await User.findOne({email});
+        if(user){
+            return res.status(400).json({
+                errors: [{msg: 'This email is already registed!'}]
+            })
+        }
+        const salt = await bcrypt.genSalt(10);
+        const pass = await bcrypt.hash(password, salt);
+        await User.updateOne(
+        { "_id":  _id},
+        {
+            $set: { "email" : email,
+            "password":pass
+        }
+    } );
+    const user_curr = await User.findById(_id).select('-password');
+    res.json(user_curr)
+    } catch (error) {
+        
+    }
+})
+
 
 module.exports = router;

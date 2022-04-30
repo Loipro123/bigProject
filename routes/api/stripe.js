@@ -46,7 +46,6 @@ router.post('/', async(req,res)=> {
           }
         );
         // console.log("Charge:", { charge });
-        status = "success";
         if(userId){
         await User.updateOne(
             { "_id":  userId},{ $pop: { address: -1 } });
@@ -88,13 +87,15 @@ router.post('/', async(req,res)=> {
              }
             )
         })
+        const user = await User.findById(userId).select('-password');
+        res.json(user)
         }
       } catch (error) {
         console.error("Error:", error);
         status = "failure";
       }
     
-      res.json({ error, status });
+      // res.json({ error, status });
      
     });
 module.exports = router;

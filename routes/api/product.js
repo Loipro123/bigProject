@@ -70,7 +70,7 @@ router.post('/array',async (req,res) => {
               }
             }
         });
-      await Product.updateOne(
+    await Product.updateOne(
             { "_id":  productId},
       {
           $push: {
